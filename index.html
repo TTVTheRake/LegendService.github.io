@@ -3,105 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Car Game</title>
+    <title>Score Gaining Game</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
+            text-align: center;
             margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #game {
+            margin: 50px auto;
+            width: 300px;
+            height: 300px;
+            border: 2px solid #333;
+            background-color: #fff;
+            position: relative;
             overflow: hidden;
         }
-        canvas {
-            display: block;
+
+        .clickable {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        #score {
+            font-size: 24px;
+            color: #333;
+        }
+
+        #start {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin-top: 20px;
+            cursor: pointer;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
+    <h1>Score Gaining Game</h1>
+    <p id="score">Score: 0</p>
+    <div id="game"></div>
+    <button id="start">Start Game</button>
+
     <script>
-        let scene, camera, renderer, car, carSpeed = 0.1, carRotationSpeed = 0.03;
-        let carControls = { left: false, right: false, up: false, down: false };
+        const gameArea = document.getElementById('game');
+        const scoreDisplay = document.getElementById('score');
+        const startButton = document.getElementById('start');
+        let score = 0;
+        let gameInterval;
 
-        function init() {
-            // Scene setup
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87ceeb); // Sky blue
+        function createClickable() {
+            const clickable = document.createElement('div');
+            clickable.classList.add('clickable');
+            
+            const x = Math.random() * (gameArea.offsetWidth - 50);
+            const y = Math.random() * (gameArea.offsetHeight - 50);
 
-            // Camera setup
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 5, 10);
+            clickable.style.left = `${x}px`;
+            clickable.style.top = `${y}px`;
 
-            // Renderer setup
-            renderer = new THREE.WebGLRenderer();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+            clickable.addEventListener('click', () => {
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+                clickable.remove();
+            });
 
-            // Car (cube shape)
-            const carGeometry = new THREE.BoxGeometry(2, 1, 4);
-            const carMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-            car = new THREE.Mesh(carGeometry, carMaterial);
-            scene.add(car);
+            gameArea.appendChild(clickable);
 
-            // Ground
-            const groundGeometry = new THREE.PlaneGeometry(200, 200);
-            const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 });
-            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            ground.rotation.x = -Math.PI / 2;
-            scene.add(ground);
-
-            // Light source
-            const light = new THREE.PointLight(0xffffff, 1, 100);
-            light.position.set(0, 10, 10);
-            scene.add(light);
-
-            // Event listeners for controls
-            document.addEventListener('keydown', onKeyDown);
-            document.addEventListener('keyup', onKeyUp);
-
-            // Handle window resizing
-            window.addEventListener('resize', onWindowResize);
-
-            // Start animation loop
-            animate();
+            setTimeout(() => {
+                if (clickable.parentElement) {
+                    clickable.remove();
+                }
+            }, 1000);
         }
 
-        function onKeyDown(event) {
-            if (event.key === "ArrowUp") carControls.up = true;
-            if (event.key === "ArrowDown") carControls.down = true;
-            if (event.key === "ArrowLeft") carControls.left = true;
-            if (event.key === "ArrowRight") carControls.right = true;
+        function startGame() {
+            score = 0;
+            scoreDisplay.textContent = `Score: ${score}`;
+
+            if (gameInterval) {
+                clearInterval(gameInterval);
+            }
+
+            gameInterval = setInterval(createClickable, 1000);
+
+            setTimeout(() => {
+                clearInterval(gameInterval);
+                alert(`Game over! Your final score is ${score}.`);
+            }, 30000); // 30 seconds game time
         }
 
-        function onKeyUp(event) {
-            if (event.key === "ArrowUp") carControls.up = false;
-            if (event.key === "ArrowDown") carControls.down = false;
-            if (event.key === "ArrowLeft") carControls.left = false;
-            if (event.key === "ArrowRight") carControls.right = false;
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Update car movement
-            if (carControls.up) car.position.z -= carSpeed;
-            if (carControls.down) car.position.z += carSpeed;
-            if (carControls.left) car.rotation.y += carRotationSpeed;
-            if (carControls.right) car.rotation.y -= carRotationSpeed;
-
-            // Camera follows the car
-            camera.position.x = car.position.x;
-            camera.position.y = car.position.y + 5;
-            camera.position.z = car.position.z + 10;
-            camera.lookAt(car.position);
-
-            renderer.render(scene, camera);
-        }
-
-        function onWindowResize() {
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-        }
-
-        init();
+        startButton.addEventListener('click', startGame);
     </script>
 </body>
 </html>
